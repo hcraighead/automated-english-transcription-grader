@@ -140,8 +140,7 @@ def main():
             return
         if args.model == 'lstm':
             vocab = data.load_and_cache_vocab(args.data_dir, logger)
-            vocab_size = len(vocab)
-            training_objectives = get_auxiliary_objectives(args, vocab_size)
+            training_objectives = get_auxiliary_objectives(args, len(vocab))
             grader = lstm_model.SpeechGraderModel(args, vocab, training_objectives).to(args.device)
             train_data = data.load_and_cache_examples(
                 args.model, args.data_dir, args.max_seq_length, args.special_tokens,
@@ -152,9 +151,11 @@ def main():
             trainer = train.Trainer(args, grader, training_objectives)
         elif args.model == 'bert':
             tokenizer = BertTokenizer.from_pretrained(args.model_path, additional_special_tokens=args.special_tokens)
-            vocab_size = tokenizer.vocab_size
-            training_objectives = get_auxiliary_objectives(args, vocab_size)
-            grader = bert_model.SpeechGraderModel(args, training_objectives).to(args.device)
+            config = BertConfig.from_pretrained(args.model_path)
+            training_objectives = get_auxiliary_objectives(args, tokenizer.vocab_size)
+            config.training_objectives = training_objectives
+            config.max_score = args.max_score
+            grader = bert_model.SpeechGraderModel(config=config).to(args.device)
             train_data = data.load_and_cache_examples(
                 args.model, args.data_dir, args.max_seq_length, args.special_tokens,
                 logger, tokenizer=tokenizer, reload=args.overwrite_cache)
@@ -184,15 +185,17 @@ def main():
             test_data = data.load_and_cache_examples(
                 train_args.model, args.data_dir, train_args.max_seq_length, train_args.special_tokens,
                 logger, vocab=vocab, test=True, reload=args.overwrite_cache)
+            trainer = train.Trainer(train_args, grader, training_objectives)
 
         else:
             tokenizer = BertTokenizer.from_pretrained(args.model_dir, do_lower_case=True)
             training_objectives = get_auxiliary_objectives(train_args, tokenizer.vocab_size)
-            grader = bert_model.SpeechGraderModel.from_pretrained(args.model_dir, args=args, training_objectives=training_objectives).to(args.device)
+            config = BertConfig.from_pretrained(args.model_dir)
+            grader = bert_model.SpeechGraderModel.from_pretrained(args.model_dir, config=config).to(args.device)
             test_data = data.load_and_cache_examples(
                 train_args.model, args.data_dir, train_args.max_seq_length, train_args.special_tokens,
                 logger, tokenizer=tokenizer, test=True, reload=args.overwrite_cache)
-        trainer = train.Trainer(train_args, grader, training_objectives)
+            trainer = train.Trainer(train_args, grader, training_objectives, bert_tokenizer=tokenizer)
         trainer.test(test_data)
 
 if __name__ == "__main__":

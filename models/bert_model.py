@@ -32,9 +32,6 @@ class SpeechGraderModel(BertPreTrainedModel):
     '''
     BERT Model for automated speech scoring of transcripts.
 
-    Args:
-        training_objectives (dict of str: int): mapping of training objectives to the number of predictions required
-
     Attributes:
         model_dir (string) : directory to store/load this model to/from
         args : arguments from argparse
@@ -43,23 +40,23 @@ class SpeechGraderModel(BertPreTrainedModel):
             parameters (a tuple containing the number of labels (i.e. the decoder output size) and the weight to give to
             this objective in the combined weighted loss function)
     '''
-    def __init__(self, args, training_objectives):
-        super(SpeechGraderModel, self).__init__(BertConfig.from_pretrained(args.model_dir if args.model_dir else args.model_path))
-        self.args = args
+    def __init__(self, config):
+        super(SpeechGraderModel, self).__init__(config)
 
-        self.bert_config = BertConfig.from_pretrained(args.model_dir if args.model_dir else args.model_path)
-        self.bert = BertModel.from_pretrained(args.model_dir if args.model_dir else args.model_path)
+        self.bert_config = config
+        self.bert = BertModel(config)
 
         # Creates a prediction head per objective.
-        self.decoder_objectives = training_objectives.keys()
-        for objective, objective_params in training_objectives.items():
+        self.decoder_objectives = config.training_objectives.keys()
+        for objective, objective_params in config.training_objectives.items():
             num_predictions, _ = objective_params
             decoder = PredictionHead(self.bert_config, num_predictions)
             setattr(self, objective + '_decoder', decoder)
 
         # The score scaler is used to force the result of the score prediction head to be within the range of possible
         # scores.
-        self.score_scaler = nn.Hardtanh(min_val=0, max_val=args.max_score)
+        self.score_scaler = nn.Hardtanh(min_val=0, max_val=config.max_score)
+        self.init_weights()
 
     def forward(self, batch):
         """
@@ -70,11 +67,10 @@ class SpeechGraderModel(BertPreTrainedModel):
         training_objective_predictions = {}
 
         for objective in self.decoder_objectives:
-            input = bert_pooled_output if objective is 'score' else bert_sequence_output
+            input = bert_pooled_output if objective == 'score' else bert_sequence_output
             decoded_objective = getattr(self, objective + '_decoder')(input)
-            if objective == 'score':
-                decoded_objective = self.score_scaler(decoded_objective)
+            decoded_objective = self.score_scaler(decoded_objective) if objective == 'score' else decoded_objective
             training_objective_predictions[objective] = decoded_objective.view(-1, decoded_objective.shape[2]) \
-                if objective is not 'score' else decoded_objective.squeeze()
+                if objective != 'score' else decoded_objective.squeeze()
 
         return training_objective_predictions

@@ -12,7 +12,7 @@ def get_losses(training_objectives, training_objective_predictions, labels, devi
     for objective, prediction in training_objective_predictions.items():
         _, alpha = training_objectives[objective]
         # Scoring objective uses MSE loss and all other objectives use CrossEntropy loss
-        criterion = nn.MSELoss().to(device) if objective is 'score' else nn.CrossEntropyLoss(
+        criterion = nn.MSELoss().to(device) if objective == 'score' else nn.CrossEntropyLoss(
             ignore_index=-1).to(device)
         batch_labels = labels[objective].reshape(-1)
         losses[objective] = criterion(prediction, batch_labels)
