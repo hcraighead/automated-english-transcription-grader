@@ -81,12 +81,13 @@ class TSVProcessor(object):
         for (i, line) in enumerate(lines):
             if i == 0:
                 columns = {key:header_index for header_index, key in enumerate(line)}
+                continue
             id = "%s-%s" % (set_type, i)
             tokens = line[columns['text']]
             pos_tags = line[columns['pos']].split(' ') if 'pos' in columns else ['X'] * len(tokens)
             dep_rels = line[columns['deprel']].split(' ') if 'deprel' in columns else ['X'] * len(tokens)
             dep_rels = [dep_rel.split(':')[0] for dep_rel in dep_rels]
-            native_language = line[columns['pos']].split(' ') if 'l1' in columns else 'X'
+            native_language = line[columns['l1']] if 'l1' in columns else 'X'
             score = line[columns['score']]
             examples.append(
                 InputExample(id=id, tokens=tokens, score=score, pos_tags=pos_tags,
