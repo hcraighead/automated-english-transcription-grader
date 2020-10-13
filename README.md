@@ -1,7 +1,7 @@
 # Investigating the effect of auxiliary objectives for the automated grading of learner English speech transcriptions (ACL 2020)
 
 
-This repository includes code to replicate experiments in the [Investigating the effect of auxiliary objectives for the automated grading of learner English speech transcriptions (ACL2020)]() paper. It provides the LSTM and BERT speech grader models with sequence labelling auxiliary objective prediction heads, code for training and evaluating the models and code for data preparation from TSV files.
+This repository includes code to replicate experiments in the [Investigating the effect of auxiliary objectives for the automated grading of learner English speech transcriptions (ACL2020)](https://www.aclweb.org/anthology/2020.acl-main.206.pdf) paper. It provides the LSTM and BERT speech grader models with sequence labelling auxiliary objective prediction heads, code for training and evaluating the models and code for data preparation from TSV files. Please cite our paper when using our code.
 
 ## Installation
 This project was developed using Python 3.6.9, [PyTorch](https://pytorch.org/) and [Transformers](https://github.com/huggingface/transformers). To install the project, use the following commands:
@@ -99,4 +99,20 @@ python3 run_speech_grader.py \
 This will log various statistics about the performance of the model on the test set. Additionally, `--prediction-file` can be used to provide a directory to store the predictions of the grader.
 
 ## Citation
-TBD
+```
+@inproceedings{craighead-etal-2020-investigating,
+    title = "Investigating the effect of auxiliary objectives for the automated grading of learner {E}nglish speech transcriptions",
+    author = "Craighead, Hannah  and
+      Caines, Andrew  and
+      Buttery, Paula  and
+      Yannakoudakis, Helen",
+    booktitle = "Proceedings of the 58th Annual Meeting of the Association for Computational Linguistics",
+    month = jul,
+    year = "2020",
+    address = "Online",
+    publisher = "Association for Computational Linguistics",
+    url = "https://www.aclweb.org/anthology/2020.acl-main.206",
+    doi = "10.18653/v1/2020.acl-main.206",
+    pages = "2258--2269",
+}
+```
