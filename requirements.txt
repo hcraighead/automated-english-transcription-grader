@@ -1,4 +1,4 @@
-numpy==1.16.3
+numpy==1.22.0
 scipy==1.2.1
 tensorboardX==1.9
 tensorflow==2.0.0
